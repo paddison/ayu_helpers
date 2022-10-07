@@ -1,6 +1,5 @@
-/// # Ayudame Event Types
-/// 
-/// These are all the Events that get emitted by Ayudame.
+use std::{fmt::Display, time::Duration};
+
 #[derive(Debug)]
 pub enum Event {
     PreInit{ rt: u64, pid: u64 },
@@ -18,15 +17,33 @@ pub enum Event {
     Barrier,
 }
 
+pub enum EventError {
+    InvalidId(u64),
+    NotImplemented(EventType),
+    EventBufferTooShort(usize)
+}
+
+impl Display for EventError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            EventError::InvalidId(id) => format!("Invalid Event id: {}", id),
+            EventError::NotImplemented(e_type) => format!("Event Type not implemented: {:?}", e_type),
+            EventError::EventBufferTooShort(size) =>format!("Buffer too short, is {} bytes. Needs to be at least 64 bytes", size),
+        };
+
+        write!(f, "{}", msg)
+    }
+}
+
 
 // TODO implement error type for enum creation failure
 impl TryFrom<&[u8]> for Event {
-    type Error = &'static str;
+    type Error = EventError;
 
     fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
 
         if buf.len() < 64 {
-            return Err("Buffer too short");
+            return Err(EventError::EventBufferTooShort(buf.len()));
         }
 
         let u64_buf = u8_buf_to_u64_buf(&buf[..64]);
@@ -70,14 +87,16 @@ impl TryFrom<&[u8]> for Event {
             EventType::Barrier => Self::Barrier,
             EventType::WaitOn => Self::WaitOn { task_id },
             EventType::Finish => Self::Finish,
-            _ => return Err("Event not yet implemented"),
+            e_type => return Err(EventError::NotImplemented(e_type)),
         };
 
         Ok(event)
     }
 }
 
-
+/// # Ayudame Event Types
+/// 
+/// These are all the Events that get emitted by Ayudame.
 #[derive(Debug)]
 pub enum EventType {
     Null,
@@ -101,12 +120,12 @@ pub enum EventType {
 }
 
 impl TryFrom<&[u8]> for EventType {
-    type Error = &'static str;
+    type Error = EventError;
 
     fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
         use EventType::*;
         if buf.len() < 64 {
-            return Err("Provided Buffer too short");
+            return Err(EventError::EventBufferTooShort(buf.len()));
         }
 
         let id = u64::from_be_bytes([
@@ -133,7 +152,7 @@ impl TryFrom<&[u8]> for EventType {
             15 => WaitOn,
             16 => Barrier,
             17 => AddWaitOnTask,
-            _ => return Err("Invalid event id in buffer"),
+            id => return Err(EventError::InvalidId(id)),
         };
 
         Ok(event)
@@ -141,7 +160,7 @@ impl TryFrom<&[u8]> for EventType {
 }
 
 impl TryFrom<u64> for EventType {
-    type Error = &'static str;
+    type Error = EventError;
     
     fn try_from(event_id: u64) -> Result<Self, Self::Error> {
         use EventType::*;
@@ -165,7 +184,7 @@ impl TryFrom<u64> for EventType {
             15 => WaitOn,
             16 => Barrier,
             17 => AddWaitOnTask,
-            _ => return Err("Invalid index"),
+            id => return Err(EventError::InvalidId(id)),
         };
 
         Ok(event)
@@ -218,4 +237,9 @@ fn test_f_name_from_string() {
     println!("{:?}", CStr::from_bytes_with_nul(&buf[..4]));
     assert_eq!(actual, expected);
 }
+
+
+
+
+
 
