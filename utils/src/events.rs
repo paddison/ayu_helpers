@@ -17,10 +17,12 @@ pub enum Event {
     Barrier,
 }
 
+#[derive(Debug)]
 pub enum EventError {
     InvalidId(u64),
     NotImplemented(EventType),
-    EventBufferTooShort(usize)
+    EventBufferTooShort(usize),
+    BufferUnevenByteBoundary,
 }
 
 impl Display for EventError {
@@ -28,7 +30,8 @@ impl Display for EventError {
         let msg = match self {
             EventError::InvalidId(id) => format!("Invalid Event id: {}", id),
             EventError::NotImplemented(e_type) => format!("Event Type not implemented: {:?}", e_type),
-            EventError::EventBufferTooShort(size) =>format!("Buffer too short, is {} bytes. Needs to be at least 64 bytes", size),
+            EventError::EventBufferTooShort(size) => format!("Buffer too short, is {} bytes. Needs to be at least 64 bytes", size),
+            EventError::BufferUnevenByteBoundary => String::from("Buffer length needs to be on even byte boundary (multiple of 8).")
         };
 
         write!(f, "{}", msg)
@@ -46,7 +49,7 @@ impl TryFrom<&[u8]> for Event {
             return Err(EventError::EventBufferTooShort(buf.len()));
         }
 
-        let u64_buf = u8_buf_to_u64_buf(&buf[..64]);
+        let u64_buf = u8_buf_to_u64_buf(&buf[..64])?;
 
         // values that are always the same for each event
         let rt = u64_buf[0];
@@ -97,7 +100,7 @@ impl TryFrom<&[u8]> for Event {
 /// # Ayudame Event Types
 /// 
 /// These are all the Events that get emitted by Ayudame.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum EventType {
     Null,
     PreInit,
@@ -128,10 +131,10 @@ impl TryFrom<&[u8]> for EventType {
             return Err(EventError::EventBufferTooShort(buf.len()));
         }
 
-        let id = u64::from_be_bytes([
-            buf[24], buf[25], buf[26], buf[27],
-            buf[28], buf[29], buf[30], buf[31],
-        ]);
+        let mut id_buf = [0u8; 8];
+        id_buf.copy_from_slice(&buf[16..24]);
+
+        let id = u64::from_be_bytes(id_buf);
 
         let event = match id {
             0 => Null,
@@ -198,16 +201,20 @@ pub fn read_function_name_from_buffer(buf: &[u8]) -> String {
     String::from_utf8(buf.iter().cloned().collect::<Vec<u8>>()).unwrap_or(String::new())
 }
 
-pub fn u8_buf_to_u64_buf(buf: &[u8]) -> Vec<u64> {
+pub fn u8_buf_to_u64_buf(buf: &[u8]) -> Result<Vec<u64>, EventError> {
     let mut u64_buf = Vec::new();
+
+    if buf.len() % 8 != 0 {
+        return Err(EventError::BufferUnevenByteBoundary);
+    }
     
     for (i, _) in buf.iter().enumerate().step_by(8) {
-        let raw_number: [u8; 8] = [buf[i], buf[i + 1], buf[i + 2], buf[i + 3], 
-                                   buf[i + 4], buf[i + 5], buf[i + 6], buf[i + 7]];
+        let mut raw_number: [u8; 8] = [0; 8];
+        raw_number.copy_from_slice(&buf[i..i + 8]);
         u64_buf.push(u64::from_be_bytes(raw_number));
     }
 
-    u64_buf
+    Ok(u64_buf)
 }
 
 pub fn get_timestamp(buf: &[u8]) -> Option<Duration> {
@@ -281,7 +288,40 @@ fn test_get_timestamp() {
     assert!(actual_invalid.is_none());
 }
 
+#[test]
+fn test_event_type_try_from_slice() {
+    let buf: [u8; 64] = [0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 4, 
+               0, 0, 0, 0, 0, 0, 0, 3, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               23, 27, 188, 20, 119, 241, 215, 47];
+    
+    let actual = EventType::try_from(buf.as_slice());
+    assert!(actual.is_ok());
+    assert_eq!(actual.unwrap(), EventType::RegisterFunction);
+}
 
+#[test]
+fn test_u8_buf_to_u64_buf() {
+    let buf = [128, 64, 32, 255, 0, 0, 0, 1];
+    let expected = vec![u64::from_be_bytes(buf.clone())];
+    assert_eq!(u8_buf_to_u64_buf(buf.as_slice()).unwrap(), expected);
 
+    let buf = [0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 4, 
+               0, 0, 0, 0, 0, 0, 0, 3, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 
+               23, 27, 188, 20, 119, 241, 215, 47];
 
+    let expected = vec![0, 0, 4, 3, 0, 0, 0, u64::from_be_bytes([23, 27, 188, 20, 119, 241, 215, 47])];
+    assert_eq!(u8_buf_to_u64_buf(buf.as_slice()).unwrap(), expected);
 
+    let buf = [128, 64, 32];
+    assert!(u8_buf_to_u64_buf(buf.as_slice()).is_err());
+}
