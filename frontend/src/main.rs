@@ -44,7 +44,6 @@ fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> i
     move || {
         let mut buf = requests::prepare_step(5);
         println!("Started AyuRequest Sender thread");
-        // println!("State is {}", state.read().unwrap());
         loop {
             requests::print_options();
             println!("Wrote: {:?}", stream.write(&mut buf));

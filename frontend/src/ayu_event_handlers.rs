@@ -3,7 +3,7 @@ use std::net::TcpStream;
 use std::sync::{RwLock, Arc};
 
 use utils::AppState;
-use utils::events::{self, Event, EventType};
+use utils::events::{self, Event, EventType, EventError};
 
 pub enum EventResult {
     Exit,
@@ -11,7 +11,7 @@ pub enum EventResult {
     Fail, // maybe add this??
 }
 
-pub fn handle_event(buf: &[u8], mut state_lock: &mut Arc<RwLock<AppState>>, stream: &mut TcpStream) -> Result<EventResult, &'static str> {
+pub fn handle_event(buf: &[u8], mut state_lock: &mut Arc<RwLock<AppState>>, stream: &mut TcpStream) -> Result<EventResult, EventError> {
     let result = match Event::try_from(buf)? {
         Event::PreInit { rt, pid } => handle_pre_init(rt, pid, &mut state_lock),
         Event::Init { n_threads } => handle_init(n_threads, &mut state_lock),

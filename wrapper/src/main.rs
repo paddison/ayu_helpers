@@ -8,7 +8,7 @@ use std::fmt::Display;
 use std::convert::TryFrom;
 use utils::AppState;
 use utils::events::EventType;
-use input_handler::{match_or_continue, get_numerical_input, get_input};
+use io_utils::{match_or_continue, get_numerical_input, get_input};
 
 const DUMMY_MEMADDR: u64 = 0xffee0000;
 

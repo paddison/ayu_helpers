@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-input_handler = { path = "../io_utils", package = "io_utils" }
+io_utils = { path = "../io_utils", package = "io_utils" }
 utils = { path = "../utils", package = "utils" }
