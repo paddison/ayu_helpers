@@ -210,6 +210,20 @@ pub fn u8_buf_to_u64_buf(buf: &[u8]) -> Vec<u64> {
     u64_buf
 }
 
+pub fn get_timestamp(buf: &[u8]) -> Option<Duration> {
+    if buf.len() < 8 {
+        eprintln!("Buffer needs to be at least 8 bytes long.");
+        return None;
+    }
+
+    let mut new_buf = [0u8; 8];
+    new_buf.clone_from_slice(&buf[buf.len() - 8..]);
+
+    let nanos = u64::from_be_bytes(new_buf);
+
+    Some(Duration::from_nanos(nanos))
+}
+
 #[test]
 fn test_string_from_buffer() {
     let expected = String::from("Hello my name is...");
@@ -238,6 +252,34 @@ fn test_f_name_from_string() {
     assert_eq!(actual, expected);
 }
 
+#[test]
+fn test_get_timestamp() {
+    let expected = Some(
+        Duration::from_nanos(
+            u64::from_be_bytes([23, 27, 125, 89, 31, 98, 134, 231])
+        )
+    );
+    let buf_long = [102, 117, 110, 99, 0, 0, 0, 0, 
+                    0, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 0, 0, 0, 0, 4, 
+                    0, 0, 0, 0, 0, 0, 0, 4, 
+                    0, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 0, 0, 0, 0, 0, 
+                    0, 0, 0, 0, 0, 0, 0, 0, 
+                    23, 27, 125, 89, 31, 98, 134, 231];
+    let actual_long = get_timestamp(&buf_long);
+    assert!(actual_long.is_some());
+    assert_eq!(actual_long, expected);
+
+    let buf_short = [23, 27, 125, 89, 31, 98, 134, 231];
+    let actual_short = get_timestamp(&buf_short);
+    assert!(actual_short.is_some());
+    assert_eq!(actual_short, expected);
+
+    let buf_invalid = [23, 27, 125, 89, 31, 98, 134];
+    let actual_invalid = get_timestamp(&buf_invalid);
+    assert!(actual_invalid.is_none());
+}
 
 
 
