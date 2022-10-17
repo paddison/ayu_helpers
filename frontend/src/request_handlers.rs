@@ -4,14 +4,6 @@ use utils::{requests::{Request, RequestError}, events::EventType, AppState};
 use io_utils::get_numerical_input;
 use std::io::stdout;
 
-// request types are at index 1 in buffer
-// all values are stored as int
-// buffer is 8 in size_t
-
-// never used
-
-// TODO store parameters for requests on enum
-
 type Result<T> = std::result::Result<T, UserInputError>;
 
 pub enum UserInputError {
@@ -34,17 +26,23 @@ impl std::fmt::Display for UserInputError {
     }
 }
 
-pub fn prepare_null(buf: &mut [u8]) -> Result<()> {
+pub fn prepare_null() -> Result<()> {
     Ok(())
 }
 
 // doesn't store any data
-pub fn prepare_no_request(buf: &mut [u8]) -> Result<()> {
+pub fn prepare_no_request() -> Result<()> {
     Ok(())
 }
 
 // event is at 2, value at 3, either 0 or 1
 pub fn prepare_pause_on_event(buf: &mut [u8]) -> Result<()> {
+    println!("Ayudame reacts to pause on the following events:
+0:\tNull,
+10:\tPreRunTask
+14:\tRemoveTask
+15:\tWaitOn
+16:\tBarrier");
     print!("Enter id of Event: ");
     flush();
 

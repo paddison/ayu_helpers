@@ -3,7 +3,7 @@ use std::net::TcpStream;
 use std::sync::{RwLock, Arc};
 
 use utils::AppState;
-use utils::events::{self, Event, EventType, EventError};
+use utils::events::{self, Event, EventError};
 
 pub enum EventResult {
     Exit,
@@ -42,8 +42,6 @@ pub fn handle_event(buf: &[u8], mut state_lock: &mut Arc<RwLock<AppState>>, stre
         Event::WaitOn { task_id } => handle_wait_on(task_id, &mut state_lock),
         Event::Finish => handle_finish(&mut state_lock),
     }; 
-
-    // println!("{}\n", state_lock.read().unwrap());
 
     Ok(result)
 }

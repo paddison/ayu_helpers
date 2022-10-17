@@ -45,7 +45,7 @@ fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> i
     move || {
         println!("Started AyuRequest Sender thread");
         loop {
-            let mut buf = [0u8; 64];
+            let mut buf = [0u8; BUF_SIZE];
             println!("Tasks:");
             {
                 let s = state.write().unwrap();
@@ -55,8 +55,8 @@ fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> i
             let request = match_or_continue!(requests::get_request_type());
             requests::write_request(&mut buf, &request);
             let result = match request {
-                utils::requests::Request::Null => prepare_null(&mut buf),
-                utils::requests::Request::NoRequest => prepare_no_request(&mut buf),
+                utils::requests::Request::Null => prepare_null(),
+                utils::requests::Request::NoRequest => prepare_no_request(),
                 utils::requests::Request::PauseOnEvent => prepare_pause_on_event(&mut buf),
                 utils::requests::Request::PauseOnTask => prepare_pause_on_task(&mut buf, &state),
                 utils::requests::Request::PauseOnFunction => prepare_pause_on_function(&mut buf),
@@ -66,9 +66,9 @@ fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> i
                 utils::requests::Request::PrioritiseTask => prepare_prioritise_task(&mut buf, &state),
                 utils::requests::Request::SetNumThreads => prepare_set_num_threads(&mut buf),
             };
-            pretty_print_buf(&buf);
+            // pretty_print_buf(&buf);
             match result {
-                Ok(_) => println!("Wrote: {:?}", stream.write(&mut buf)),
+                Ok(_) => { let _ = stream.write(&mut buf); },
                 Err(e) => eprintln!("{}", e), 
             }
         }
