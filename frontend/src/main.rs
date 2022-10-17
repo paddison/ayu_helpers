@@ -7,9 +7,10 @@ pub mod ayu_event_handlers;
 
 use std::{net::{TcpStream, SocketAddrV4, Ipv4Addr}, env::VarError, time::Duration, sync::{Arc, RwLock}, io::{Read, Write, IoSliceMut}};
 
+use io_utils::match_or_continue;
 use utils::AppState;
 
-use crate::{request_handlers as requests, ayu_event_handlers::EventResult};
+use crate::{request_handlers as requests, ayu_event_handlers::EventResult, requests::{prepare_null, prepare_no_request, prepare_pause_on_event, prepare_pause_on_task, prepare_pause_on_function, prepare_step, prepare_breakpoint, prepare_block_task, prepare_prioritise_task, prepare_set_num_threads}};
 use crate::ayu_event_handlers as events;
 
 const AYU_PORT: u16 = 5555;
@@ -42,13 +43,34 @@ fn main() -> Result<(), String>{
 
 fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> impl FnOnce() -> () {
     move || {
-        let mut buf = requests::prepare_step(5);
         println!("Started AyuRequest Sender thread");
         loop {
+            let mut buf = [0u8; 64];
+            println!("Tasks:");
+            {
+                let s = state.write().unwrap();
+                s.list_tasks();
+            }
             requests::print_options();
-            println!("Wrote: {:?}", stream.write(&mut buf));
-            std::thread::sleep(Duration::from_secs(5));
-            break;
+            let request = match_or_continue!(requests::get_request_type());
+            requests::write_request(&mut buf, &request);
+            let result = match request {
+                utils::requests::Request::Null => prepare_null(&mut buf),
+                utils::requests::Request::NoRequest => prepare_no_request(&mut buf),
+                utils::requests::Request::PauseOnEvent => prepare_pause_on_event(&mut buf),
+                utils::requests::Request::PauseOnTask => prepare_pause_on_task(&mut buf, &state),
+                utils::requests::Request::PauseOnFunction => prepare_pause_on_function(&mut buf),
+                utils::requests::Request::Step => prepare_step(&mut buf),
+                utils::requests::Request::Breakpoint => prepare_breakpoint(&mut buf),
+                utils::requests::Request::BlockTask => prepare_block_task(&mut buf, &state),
+                utils::requests::Request::PrioritiseTask => prepare_prioritise_task(&mut buf, &state),
+                utils::requests::Request::SetNumThreads => prepare_set_num_threads(&mut buf),
+            };
+            pretty_print_buf(&buf);
+            match result {
+                Ok(_) => println!("Wrote: {:?}", stream.write(&mut buf)),
+                Err(e) => eprintln!("{}", e), 
+            }
         }
     }
 }
@@ -57,7 +79,6 @@ fn event_receiver_loop(mut state: Arc<RwLock<AppState>>, mut stream: TcpStream) 
     move || {
         let mut buf = [0u8; 64];
         println!("Started AyuEvent Receiver thread");
-        // println!("State is {}", state.write().unwrap());
         loop {
             let n = match stream.read(&mut buf){
                 Ok(n) => n,
@@ -65,9 +86,7 @@ fn event_receiver_loop(mut state: Arc<RwLock<AppState>>, mut stream: TcpStream) 
             };
             
             if n > 0 {
-                println!("Read: {} bytes", n);
-                println!("{:?}", buf);
-                // println!("{:?}", string_buf);
+                // println!("Read: {} bytes", n);
                 match events::handle_event(&buf, &mut state, &mut stream) {
                     Ok(result) => if let EventResult::Exit = result { break }
                     Err(e) => eprintln!("Unable to handle received event: {}", e),
@@ -77,6 +96,11 @@ fn event_receiver_loop(mut state: Arc<RwLock<AppState>>, mut stream: TcpStream) 
     }
 }
 
+fn pretty_print_buf(buf: &[u8]) {
+    for i in 0..8 {
+        println!("{:?}", &buf[i * 8..(i + 1) * 8]);
+    }
+}
 
 #[test]
 fn test_to_buffer() {

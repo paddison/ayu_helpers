@@ -43,7 +43,8 @@ pub fn handle_event(buf: &[u8], mut state_lock: &mut Arc<RwLock<AppState>>, stre
         Event::Finish => handle_finish(&mut state_lock),
     }; 
 
-    println!("Current state is: {}", state_lock.read().unwrap());
+    // println!("{}\n", state_lock.read().unwrap());
+
     Ok(result)
 }
 
@@ -90,7 +91,7 @@ fn handle_register_function(func_id: u64, name: String, string_len: usize, state
 }
 
 fn handle_add_dependency(to_id: u64, from_id: u64, memaddr: u64, orig_memaddr: u64, state_lock: &RwLock<AppState>) -> EventResult {
-    println!("Got AddDependency event, memadd: {memaddr}, orig_memaddr: {orig_memaddr}");
+    println!("Got AddDependency event, memadd: {:x}, orig_memaddr: {:x}", memaddr, orig_memaddr);
     if let Ok(mut state) = state_lock.write() {
         state.add_dependency(to_id, from_id);
     }
@@ -105,7 +106,7 @@ fn handle_add_task_to_queue(task_id: u64, thread_id: u64, _state: &RwLock<AppSta
 }
 
 fn handle_pre_run_task(task_id: u64, thread_id: u64, _state: &RwLock<AppState>) -> EventResult {
-    println!("Got HandlePreRunTask event, task_id: {task_id}, thread_id: {thread_id}");
+    println!("Got PreRunTask event, task_id: {task_id}, thread_id: {thread_id}");
     
     EventResult::Success
 }

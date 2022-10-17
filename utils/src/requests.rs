@@ -21,7 +21,22 @@
  *  SOURCE
  */
 
-pub enum Request{
+use std::fmt::Display;
+
+pub enum RequestError {
+    InvalidId(i64)
+}
+
+impl Display for RequestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            RequestError::InvalidId(id) => format!("Invalid id for request: {}", id),
+        };
+        write!(f, "{}", msg)
+    }
+}
+
+pub enum Request {
     Null = 0,
     NoRequest = 1,
     PauseOnEvent = 2,
@@ -32,4 +47,25 @@ pub enum Request{
     BlockTask = 7,
     PrioritiseTask = 8,
     SetNumThreads = 9
+}
+
+impl TryFrom<i64> for Request {
+    type Error = RequestError;
+
+    fn try_from(value: i64) -> Result<Self, Self::Error> {
+        use Request::*;
+        match value {
+            0 => Ok(Null),
+            1 => Ok(NoRequest),
+            2 => Ok(PauseOnEvent),
+            3 => Ok(PauseOnTask),
+            4 => Ok(PauseOnFunction),
+            5 => Ok(Step),
+            6 => Ok(Breakpoint),
+            7 => Ok(BlockTask),
+            8 => Ok(PrioritiseTask),
+            9 => Ok(SetNumThreads),
+            id => Err(RequestError::InvalidId(id))
+        }
+    }
 }

@@ -129,7 +129,7 @@ pub fn get_event_type() -> EventType {
     println!("Enter index of Event to send: ");
     
     loop {
-        let n = get_numerical_input();
+        let n = get_numerical_input::<u64>();
 
         break match_or_continue!(EventType::try_from(n), "Got Invalid Index, try again");
     } 
@@ -351,7 +351,7 @@ fn create_finish() -> Result<()> {
 
 fn specify_task_id(state: &AppState) -> Result<u64> {
     println!("Select Task: ");
-    let id = get_numerical_input() as u64;
+    let id = get_numerical_input::<u64>() as u64;
     if !state.does_task_exist(id) {
         Err(UserInputError::TaskIdNotFound(id))
     } else {
