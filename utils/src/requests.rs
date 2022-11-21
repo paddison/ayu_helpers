@@ -46,7 +46,9 @@ pub enum Request {
     Breakpoint = 6,
     BlockTask = 7,
     PrioritiseTask = 8,
-    SetNumThreads = 9
+    SetNumThreads = 9,
+    Continue = 10,
+    Break = 11,
 }
 
 impl TryFrom<i64> for Request {
@@ -65,6 +67,8 @@ impl TryFrom<i64> for Request {
             7 => Ok(BlockTask),
             8 => Ok(PrioritiseTask),
             9 => Ok(SetNumThreads),
+            10 => Ok(Continue),
+            11 => Ok(Break),
             id => Err(RequestError::InvalidId(id))
         }
     }

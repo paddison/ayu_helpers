@@ -68,7 +68,7 @@ pub fn prepare_pause_on_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> R
 }
 
 // is not handled at all
-pub fn prepare_pause_on_function(buf: &mut [u8]) -> Result<()> {
+pub fn prepare_pause_on_function(_buf: &mut [u8]) -> Result<()> {
     eprintln!("Pause on function request not implemted.");
 
     Ok(())
@@ -138,6 +138,17 @@ pub fn prepare_set_num_threads(buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
+// doesn't need to do anything for now
+pub fn prepare_continue(_buf: &mut [u8]) -> Result<()> {
+    Ok(())
+}
+
+// doesn't need to do anything for now
+pub fn prepare_break(_buf: &mut [u8]) -> Result<()> {
+    
+    Ok(())
+}
+
 pub fn get_request_type() -> std::result::Result<Request, RequestError> {
     let id = get_numerical_input::<i64>();
     Request::try_from(id)
@@ -145,16 +156,18 @@ pub fn get_request_type() -> std::result::Result<Request, RequestError> {
 
 pub fn print_options() {
     println!("Select a request:
-0:\tNull
-1:\tNoRequest
-2:\tPauseOnEvent
-3:\tPauseOnTask
-4:\tPauseOnFunction
-5:\tStep
-6:\tBreakpoint
-7:\tBlockTask
-8:\tPrioritiseTask
-9:\tSetNumThreads
+ 0:\tNull
+ 1:\tNoRequest
+ 2:\tPauseOnEvent
+ 3:\tPauseOnTask
+ 4:\tPauseOnFunction
+ 5:\tStep
+ 6:\tBreakpoint
+ 7:\tBlockTask
+ 8:\tPrioritiseTask
+ 9:\tSetNumThreads
+10:\tContinue
+11:\tBreak
 ")
 }
 

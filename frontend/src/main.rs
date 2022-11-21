@@ -10,22 +10,29 @@ use std::{net::{TcpStream, SocketAddrV4, Ipv4Addr}, env::VarError, time::Duratio
 use io_utils::match_or_continue;
 use utils::AppState;
 
-use crate::{request_handlers as requests, ayu_event_handlers::EventResult, requests::{prepare_null, prepare_no_request, prepare_pause_on_event, prepare_pause_on_task, prepare_pause_on_function, prepare_step, prepare_breakpoint, prepare_block_task, prepare_prioritise_task, prepare_set_num_threads}};
+use crate::{request_handlers as requests, ayu_event_handlers::EventResult, requests::{prepare_null, prepare_no_request, prepare_pause_on_event, prepare_pause_on_task, prepare_pause_on_function, prepare_step, prepare_breakpoint, prepare_block_task, prepare_prioritise_task, prepare_set_num_threads, prepare_continue, prepare_break}};
 use crate::ayu_event_handlers as events;
 
 const AYU_PORT: u16 = 5555;
 const BUF_SIZE: usize = 8 * 8;
 
-// Spawn to threads, one to send out requests, the other to receive requests
+// TODO 18.10. Add a way to filter output, depending on loglevels, set by env
 
-fn main() -> Result<(), String>{
+// Spawn two threads, one to send out requests, the other to receive requests
+
+fn main() -> Result<(), String> {
     // tries to connect to a socket, should be read from AYU_PORT env
     let port = std::env::var("AYU_PORT")
                 .and_then(|p| p.parse::<u16>()
                 .map_err(|_| VarError::NotPresent))
                 .unwrap_or(AYU_PORT);
     
-    let event_receive_stream = TcpStream::connect(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), port)).map_err(|e| format!("Unable to connect to socket: {}, aborting...", e))?; 
+    let event_receive_stream = loop {
+        match TcpStream::connect(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), port)).map_err(|e| format!("Unable to connect to socket: {}, aborting...", e)) {
+            Ok(s) => break s,
+            Err(_) => std::thread::sleep(Duration::from_secs(1)),
+        }
+    };
     let request_stream = event_receive_stream.try_clone().unwrap();
 
     let event_receive_state = Arc::new(RwLock::new(AppState::new()));
@@ -65,6 +72,9 @@ fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> i
                 utils::requests::Request::BlockTask => prepare_block_task(&mut buf, &state),
                 utils::requests::Request::PrioritiseTask => prepare_prioritise_task(&mut buf, &state),
                 utils::requests::Request::SetNumThreads => prepare_set_num_threads(&mut buf),
+                utils::requests::Request::Continue => prepare_continue(&mut buf),
+                utils::requests::Request::Break => prepare_break(&mut buf),
+
             };
             // pretty_print_buf(&buf);
             match result {

@@ -69,8 +69,8 @@ fn main() {
     // create event loop
     let mut state = AppState::default();
 
-    let _ = create_pre_init(&mut state);
-    let _ = create_init(&mut state);
+    // let _ = create_pre_init(&mut state);
+    // let _ = create_init(&mut state);
     
     loop {
         match ask_for_command() {
