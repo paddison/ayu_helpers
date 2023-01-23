@@ -36,6 +36,7 @@ impl Display for RequestError {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Request {
     Null = 0,
     NoRequest = 1,
@@ -49,6 +50,8 @@ pub enum Request {
     SetNumThreads = 9,
     Continue = 10,
     Break = 11,
+    BreakAtTask = 12,
+    UnbreakAtTask = 13,
 }
 
 impl TryFrom<i64> for Request {
@@ -69,6 +72,8 @@ impl TryFrom<i64> for Request {
             9 => Ok(SetNumThreads),
             10 => Ok(Continue),
             11 => Ok(Break),
+            12 => Ok(BreakAtTask),
+            13 => Ok(UnbreakAtTask),
             id => Err(RequestError::InvalidId(id))
         }
     }

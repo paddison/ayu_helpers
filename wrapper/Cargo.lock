@@ -3,16 +3,41 @@
 version = 3
 
 [[package]]
+name = "ayudame_core_rs"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "env_logger",
+ "log",
+]
+
+[[package]]
 name = "ayudame_wrapper"
 version = "0.1.0"
 dependencies = [
+ "ayudame_core_rs",
  "io_utils",
  "utils",
 ]
 
 [[package]]
+name = "cfg-if"
+version = "1.0.0"
+
+[[package]]
+name = "env_logger"
+version = "0.10.0"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "io_utils"
 version = "0.1.0"
+
+[[package]]
+name = "log"
+version = "0.4.17"
 
 [[package]]
 name = "utils"

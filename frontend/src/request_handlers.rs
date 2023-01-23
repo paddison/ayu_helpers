@@ -138,6 +138,20 @@ pub fn prepare_set_num_threads(buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
+pub fn prepare_break_at_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
+    let task_id = get_task_id(state)?;
+    write_into_buffer(buf, &task_id.to_be_bytes(), 2);
+    
+    Ok(())
+}
+
+pub fn prepare_unbreak_at_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
+    let task_id = get_task_id(state)?;
+    write_into_buffer(buf, &task_id.to_be_bytes(), 2);
+
+    Ok(())
+}
+
 // doesn't need to do anything for now
 pub fn prepare_continue(_buf: &mut [u8]) -> Result<()> {
     Ok(())
@@ -168,6 +182,7 @@ pub fn print_options() {
  9:\tSetNumThreads
 10:\tContinue
 11:\tBreak
+12:\tBreakAtTask
 ")
 }
 

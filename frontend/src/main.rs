@@ -5,12 +5,12 @@
 pub mod request_handlers;
 pub mod ayu_event_handlers;
 
-use std::{net::{TcpStream, SocketAddrV4, Ipv4Addr}, env::VarError, time::Duration, sync::{Arc, RwLock}, io::{Read, Write, IoSliceMut}};
+use std::{net::{TcpStream, SocketAddrV4, Ipv4Addr}, env::VarError, time::Duration, sync::{Arc, RwLock}, io::{Read, Write}};
 
 use io_utils::match_or_continue;
 use utils::AppState;
 
-use crate::{request_handlers as requests, ayu_event_handlers::EventResult, requests::{prepare_null, prepare_no_request, prepare_pause_on_event, prepare_pause_on_task, prepare_pause_on_function, prepare_step, prepare_breakpoint, prepare_block_task, prepare_prioritise_task, prepare_set_num_threads, prepare_continue, prepare_break}};
+use crate::{request_handlers as requests, ayu_event_handlers::EventResult, requests::{prepare_break_at_task, prepare_unbreak_at_task, prepare_null, prepare_no_request, prepare_pause_on_event, prepare_pause_on_task, prepare_pause_on_function, prepare_step, prepare_breakpoint, prepare_block_task, prepare_prioritise_task, prepare_set_num_threads, prepare_continue, prepare_break}};
 use crate::ayu_event_handlers as events;
 
 const AYU_PORT: u16 = 5555;
@@ -74,7 +74,8 @@ fn request_sender_loop(state: Arc<RwLock<AppState>>, mut stream: TcpStream) -> i
                 utils::requests::Request::SetNumThreads => prepare_set_num_threads(&mut buf),
                 utils::requests::Request::Continue => prepare_continue(&mut buf),
                 utils::requests::Request::Break => prepare_break(&mut buf),
-
+                utils::requests::Request::BreakAtTask => prepare_break_at_task(&mut buf, &state),
+                utils::requests::Request::UnbreakAtTask => prepare_unbreak_at_task(&mut buf, &state),
             };
             // pretty_print_buf(&buf);
             match result {
@@ -106,7 +107,7 @@ fn event_receiver_loop(mut state: Arc<RwLock<AppState>>, mut stream: TcpStream) 
     }
 }
 
-fn pretty_print_buf(buf: &[u8]) {
+fn _pretty_print_buf(buf: &[u8]) {
     for i in 0..8 {
         println!("{:?}", &buf[i * 8..(i + 1) * 8]);
     }

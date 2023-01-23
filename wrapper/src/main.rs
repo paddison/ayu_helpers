@@ -9,6 +9,7 @@ use std::convert::TryFrom;
 use utils::AppState;
 use utils::events::EventType;
 use io_utils::{match_or_continue, get_numerical_input, get_input};
+use ayudame_core_rs::ayu_events::*;
 
 const DUMMY_MEMADDR: u64 = 0xffee0000;
 
@@ -48,22 +49,6 @@ impl Display for UserInputError {
 
 impl std::error::Error for UserInputError { }
 
-#[link(name = "ayudame", kind = "dylib")]
-extern {
-    fn ayu_event_preinit(rt: u64);
-    fn ayu_event_init(n_threads: u64);
-    fn ayu_event_addtask(task_id: u64, func_id: u64, priority: u64, scope_id: u64);
-    fn ayu_event_registerfunction(func_id: u64, name: *mut std::os::raw::c_char);
-    fn ayu_event_adddependency(to_id: u64, from_id: u64, memaddr: u64, orig_memaddr: u64);
-    fn ayu_event_addtasktoqueue(task_id: u64, thread_id: u64);
-    fn ayu_event_preruntask(task_id: u64, thread_id: u64);
-    fn ayu_event_runtask(task_id: u64);
-    fn ayu_event_postruntask(task_id: u64);
-    fn ayu_event_removetask(task_id: u64);
-    fn ayu_event_barrier();
-    fn ayu_event_waiton(task_id: u64);
-    fn ayu_event_finish();
-}
 
 fn main() {
     // create event loop
@@ -158,9 +143,7 @@ fn create_pre_init(state: &mut AppState) -> Result<()> {
     if state.is_pre_init {
         return Err(UserInputError::AlreadyInitialized("PreInit"));
     }
-    unsafe { 
-        ayu_event_preinit(0); 
-    }
+    ayu_event_preinit(0); 
 
     state.is_pre_init = true;
     Ok(())
@@ -170,9 +153,7 @@ fn create_init(state: &mut AppState) -> Result<()> {
     if state.is_init {
         return Err(UserInputError::AlreadyInitialized("Init"));
     }
-    unsafe {
-        ayu_event_init(2);
-    }
+    ayu_event_init(2);
 
     state.is_init = true;
 
@@ -214,9 +195,7 @@ fn create_add_task(state: &mut AppState) -> Result<()>{
 
     let (task_id, func_id, priority, scope_id) = task.into_raw_parts();
 
-    unsafe {
-        ayu_event_addtask(task_id, func_id, priority, scope_id);
-    }
+    ayu_event_addtask(task_id, func_id, priority, scope_id);
 
     Ok(())
 }
@@ -230,9 +209,7 @@ fn create_register_function(state: &mut AppState) -> Result<()> {
 
     let (id, name) = function.into_raw_parts();
 
-    unsafe {
-        ayu_event_registerfunction(id, name);
-    }
+    ayu_event_registerfunction(id, name);
 
     Ok(())
 }
@@ -255,9 +232,7 @@ fn create_add_dependency(state: &mut AppState) -> Result<()> {
     
     state.add_dependency(parent_id, child_id);
 
-    unsafe {
-        ayu_event_adddependency(parent_id, child_id, memaddr, orig_memaddr);
-    }
+    ayu_event_adddependency(parent_id, child_id, memaddr, orig_memaddr);
     Ok(())
 }
 
@@ -267,9 +242,7 @@ fn create_add_task_to_queue(state: & AppState) -> Result<()> {
     let task_id = get_numerical_input();
     let (_, _, _, scope_id) = state.get_task(task_id).ok_or(UserInputError::TaskIdNotFound(task_id))?.into_raw_parts();
 
-    unsafe {
-        ayu_event_addtasktoqueue(task_id, scope_id);
-    }
+    ayu_event_addtasktoqueue(task_id, scope_id);
 
     Ok(())
 }
@@ -280,9 +253,7 @@ fn create_pre_run_task(state: &AppState) -> Result<()> {
 
     let (_, _, _, scope_id) = state.get_task(task_id).ok_or(UserInputError::TaskIdNotFound(task_id))?.into_raw_parts();
 
-    unsafe {
-        ayu_event_preruntask(task_id, scope_id);
-    }
+    ayu_event_preruntask(task_id, scope_id);
 
     Ok(())
 }
@@ -291,9 +262,7 @@ fn create_run_task(state: &AppState) -> Result<()> {
     state.list_tasks();
     let task_id = specify_task_id(state)?;
 
-    unsafe {
-        ayu_event_runtask(task_id);
-    }
+    ayu_event_runtask(task_id);
 
     Ok(())
 }
@@ -302,9 +271,7 @@ fn create_post_run_task(state: &AppState) -> Result<()> {
     state.list_tasks();
     let task_id = specify_task_id(state)?;
 
-    unsafe {
-        ayu_event_postruntask(task_id);
-    }
+    ayu_event_postruntask(task_id);
 
     Ok(())
 }
@@ -315,17 +282,13 @@ fn create_remove_task(state: &mut AppState) -> Result<()> {
 
     state.delete_task(task_id).ok_or(UserInputError::TaskIdNotFound(task_id))?;
 
-    unsafe {
-        ayu_event_removetask(task_id);
-    }
+    ayu_event_removetask(task_id);
 
     Ok(())
 }
 
 fn create_barrier() -> Result<()> {
-    unsafe {
-        ayu_event_barrier();
-    }
+    ayu_event_barrier();
 
     Ok(())
 }
@@ -334,17 +297,13 @@ fn create_wait_on(state: &AppState) -> Result<()> {
     state.list_tasks();
     let task_id = specify_task_id(state)?;
 
-    unsafe {
-        ayu_event_waiton(task_id);
-    }
+    ayu_event_waiton(task_id);
 
     Ok(())
 }
 
 fn create_finish() -> Result<()> {
-    unsafe {
-        ayu_event_finish();
-    }
+    ayu_event_finish();
 
     Ok(())
 }
