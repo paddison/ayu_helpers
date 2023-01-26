@@ -1,5 +1,6 @@
 # ayu_helpers
-Helper programs for development on Ayudame.
+Helper programs for development on Ayudame. See the documentation for more information. 
+The documentation can be created with `cargo doc --open --document-private-items --no-deps`
 
 ## Wrapper
 
