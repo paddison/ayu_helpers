@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "frontend",
+    "io_utils",
+    "utils",
+    "wrapper",
+]

@@ -4,8 +4,10 @@ use utils::{requests::{Request, RequestError}, events::EventType, AppState};
 use io_utils::get_numerical_input;
 use std::io::stdout;
 
+/// Shorthand for [Result::<T, UserInputError].
 type Result<T> = std::result::Result<T, UserInputError>;
 
+/// Error types for invalid user input.
 pub enum UserInputError {
     InvalidPauseValue(i64),
     InvalidEventId(u64),
@@ -26,16 +28,17 @@ impl std::fmt::Display for UserInputError {
     }
 }
 
+/// Prepare a null request.
 pub fn prepare_null() -> Result<()> {
     Ok(())
 }
 
-// doesn't store any data
+// Prepare a no request
 pub fn prepare_no_request() -> Result<()> {
     Ok(())
 }
 
-// event is at 2, value at 3, either 0 or 1
+/// Prepare a pauseon request. Only has an effect when using Cpp Ayudame.
 pub fn prepare_pause_on_event(buf: &mut [u8]) -> Result<()> {
     println!("Ayudame reacts to pause on the following events:
 0:\tNull,
@@ -56,7 +59,7 @@ pub fn prepare_pause_on_event(buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
-// value is at 3, task_id at 2
+// Prepare a pauseontask request. Only has an effect when using Cpp Ayudame.
 pub fn prepare_pause_on_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
     let task_id = get_task_id(state)?;
     let pause_val = get_pause_value()?;
@@ -67,14 +70,14 @@ pub fn prepare_pause_on_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> R
     Ok(())
 }
 
-// is not handled at all
+/// Currently not implemented and included for completenes.
 pub fn prepare_pause_on_function(_buf: &mut [u8]) -> Result<()> {
     eprintln!("Pause on function request not implemted.");
 
     Ok(())
 }
 
-// value is at 2, 
+/// Prepare a step request, which will step through the application. Works with Cpp und Rust Ayudame.
 pub fn prepare_step(buf: &mut [u8]) -> Result<()> {
     print!("Enter number of steps (must be positive): ");
     flush();
@@ -89,7 +92,7 @@ pub fn prepare_step(buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
-// value either 0 or 1, at index 3
+/// Prepare a breakpoint request. Only has an effect when using Cpp Ayudame.
 pub fn prepare_breakpoint(buf: &mut [u8]) -> Result<()> {
     let is_on = get_pause_value()?;
 
@@ -98,7 +101,7 @@ pub fn prepare_breakpoint(buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
-// id at 2 value at 3, value 1 indicates insert
+/// Prepeare a blocktask request. Only has an effect when using Cpp Ayudame.
 pub fn prepare_block_task(buf: &mut[u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
     let task_id = get_task_id(state)?;
     print!("Indicate if task is blocked: 1 is blocked, else not");
@@ -112,7 +115,7 @@ pub fn prepare_block_task(buf: &mut[u8], state: &Arc<RwLock<AppState>>) -> Resul
     Ok(())
 }
 
-// id at 2, value at 3, value is priority level
+// Prepare a prioritisetask request. Only has an effect when using Cpp Ayudame.
 pub fn prepare_prioritise_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
     let task_id = get_task_id(state)?;
     print!("Enter priority: ");
@@ -125,8 +128,7 @@ pub fn prepare_prioritise_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) ->
     Ok(())
 }
 
-// value at 2, gets checked with max_threads variable which is set in init
-// calls cpp function (needs to be included in rust as ffi function)
+/// Prepare a setnumthreads request. Only works when using Cpp Ayudame.
 pub fn prepare_set_num_threads(buf: &mut [u8]) -> Result<()> {
     let n_threads: i64 = get_numerical_input();
     if n_threads < 0 {
@@ -138,6 +140,7 @@ pub fn prepare_set_num_threads(buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
+/// Prepare a breakattask request. Only works when using Rust Ayudame.
 pub fn prepare_break_at_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
     let task_id = get_task_id(state)?;
     write_into_buffer(buf, &task_id.to_be_bytes(), 2);
@@ -145,6 +148,7 @@ pub fn prepare_break_at_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> R
     Ok(())
 }
 
+/// Prepare a unbreak at task request. Only works when using Rust Ayudame.
 pub fn prepare_unbreak_at_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) -> Result<()> {
     let task_id = get_task_id(state)?;
     write_into_buffer(buf, &task_id.to_be_bytes(), 2);
@@ -152,22 +156,25 @@ pub fn prepare_unbreak_at_task(buf: &mut [u8], state: &Arc<RwLock<AppState>>) ->
     Ok(())
 }
 
-// doesn't need to do anything for now
+/// Prepare a continue request. Only works when using Rust Ayudame.
 pub fn prepare_continue(_buf: &mut [u8]) -> Result<()> {
     Ok(())
 }
 
-// doesn't need to do anything for now
-pub fn prepare_break(_buf: &mut [u8]) -> Result<()> {
-    
+/// Prepate a break request. Only works when using Rust Ayudame.
+pub fn prepare_break(_buf: &mut [u8]) -> Result<()> { 
     Ok(())
 }
 
+/// Ask the user to enter the id of an request.
+/// 
+/// If the id is valid, the Request enum will be returned, otherwise, return an error.
 pub fn get_request_type() -> std::result::Result<Request, RequestError> {
     let id = get_numerical_input::<i64>();
     Request::try_from(id)
 }
 
+/// Prints a list of possible request types to std::out.
 pub fn print_options() {
     println!("Select a request:
  0:\tNull
@@ -186,15 +193,18 @@ pub fn print_options() {
 ")
 }
 
+/// Write the request into a buffer, which can be sent via a socket.
 pub fn write_request(buf: &mut [u8], request: &Request) {
     write_into_buffer(buf, &(*request as u64).to_be_bytes(), 1);
 }
 
+/// Write bytes into buf at the specified index.
 #[inline(always)]
 fn write_into_buffer(buf: &mut [u8], bytes: &[u8], index: usize) {
     bytes.into_iter().enumerate().for_each(|(i, n)| buf[8 * index + i] = *n);
 }
 
+/// Ask the user to enter a pause value, which is needed for some requests.
 fn get_pause_value() -> Result<u64> {
     print!("Enter pause value (1 on, 0 off): ");
     flush();
@@ -206,6 +216,7 @@ fn get_pause_value() -> Result<u64> {
     Ok(pause_val)
 }
 
+/// Prompts the user to enter a task id.
 fn get_task_id(state: &Arc<RwLock<AppState>>) -> Result<u64> {
     print!("Enter task id: ");
     flush();
@@ -220,6 +231,7 @@ fn get_task_id(state: &Arc<RwLock<AppState>>) -> Result<u64> {
     Ok(task_id)
 }
 
+/// Flush a buffer to std::out.
 fn flush() {
     let _ = stdout().flush();
 }

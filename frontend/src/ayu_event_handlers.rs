@@ -5,12 +5,14 @@ use std::sync::{RwLock, Arc};
 use utils::AppState;
 use utils::events::{self, Event, EventError};
 
+/// Possible outcomes after handling an event. Usually, a event will return Success.
+/// A finish event, will return Exit, which causes the frontend to shut down.
 pub enum EventResult {
     Exit,
     Success,
-    Fail, // maybe add this??
 }
 
+/// Handle incoming events and update the state of the Application (which tasks are currently added etc.), if necessary.
 pub fn handle_event(buf: &[u8], mut state_lock: &mut Arc<RwLock<AppState>>, stream: &mut TcpStream) -> Result<EventResult, EventError> {
     let result = match Event::try_from(buf)? {
         Event::PreInit { rt, pid } => handle_pre_init(rt, pid, &mut state_lock),

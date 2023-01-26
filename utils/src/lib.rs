@@ -1,5 +1,13 @@
+//! Contains utiliy functions and structs, which can be used to create a Application in order to debug Ayudame.
+
+/// Contains helper macros for trait implementations (currently not needed)
 mod helper_macros;
+
+/// Contains all the request types, which can be sent from a frontend to Ayudame.
 pub mod requests;
+/// Contains all the event types, which can be emitted by the runtime and sent to Ayudame,
+/// as well as some helper functions.
+pub mod events;
 
 use std::{
     fmt::Write,
@@ -7,9 +15,8 @@ use std::{
     fmt::Display, sync::{Arc, Weak, Mutex},
 };
 
-pub mod events;
 
-/// # State of the Application
+/// State of the Application
 /// 
 /// Includes all the tasks and functions added so far.
 /// `task_id_count`: Counter to create unique task ids 
@@ -33,12 +40,14 @@ impl AppState {
         }
     }
 
+    /// Print all functions contained in [AppState] to std::out.
     pub fn list_functions(&self) {
         for f in &self.functions {
             println!("{}", f)
         }
     }
 
+    /// Create a new id for a task.
     pub fn create_task_id(&self) -> u64 {
         self.tasks.iter().map(|t| t.id).max().unwrap_or(0) + 1
     }
@@ -64,26 +73,31 @@ impl AppState {
         }
     }
 
+    /// Creates a new id for a function
     pub fn create_function_id(&self) -> u64 {
         self.functions.len() as u64
     }
 
+    /// Print all tasks contained in [AppState] to std::out.
     pub fn list_tasks(&self) {
         for t in &self.tasks {
             println!("{}", t);
         }
     }
 
+    /// Check if state contains task with the given id.
     pub fn does_task_exist(&self, id: u64) -> bool {
         self.tasks.iter().position(|t| t.id == id).is_some()
     }
 
+    /// Return a shared reference fo a task with the given id.
     pub fn get_task(&self, id: u64) -> Option<&Arc<Task>> {
         self.tasks.iter()
             .position(|t| t.id == id)
             .and_then(|idx| self.tasks.get(idx))
     }
 
+    /// Get all dependencies between tasks.
     fn get_dependencies(&self) -> Vec<(u64, u64)> {
         let mut dependencies = Vec::new();
         for parent in &self.tasks {
@@ -122,6 +136,7 @@ impl AppState {
         Ok(task)
     }
 
+    /// Delete a task with the given id.
     pub fn delete_task(&mut self, task_id: u64) -> Option<()> {
 
         self.tasks.iter()
@@ -129,6 +144,7 @@ impl AppState {
             .and_then(|idx| { self.tasks.remove(idx); Some(()) })
     }
 
+    /// Add a new dependency between two tasks.
     pub fn add_dependency(&mut self, parent_id: u64, child_id: u64) -> Option<()> {
         let parent = self.get_task(parent_id)?;
         let child = self.get_task(child_id)?;
@@ -174,6 +190,7 @@ impl Display for AppState {
     }
 }
 
+/// Represents a task created by the openMP runtime.
 #[derive(Debug)]
 pub struct Task {
     id: u64,
@@ -185,6 +202,7 @@ pub struct Task {
 }
 
 impl Task {
+    /// Convert the task to a tuple containing (task_id, function_id, is_critical, thread_id).
     pub fn into_raw_parts(&self) -> (u64, u64, u64, u64) {
         let function_id = self.function
                             .as_ref()
@@ -194,6 +212,7 @@ impl Task {
         (self.id, function_id, if self.is_critical { 1 } else { 0 }, self.thread_id)
     }
 
+    /// Duh
     pub fn get_id(&self) -> u64 {
         self.id
     }
@@ -226,6 +245,8 @@ impl From<u64> for Task {
     }
 }
 
+/// Represents a function invoked by a task in the openMP runtime.
+/// It is important that the name only consists of ascii characters.
 #[derive(Debug)]
 pub struct Function {
     pub id: u64,
@@ -233,6 +254,7 @@ pub struct Function {
 }
 
 impl Function {
+    /// Create a new function. Name needs to be valid ascii.
     pub fn new(id: u64, mut name: String) -> Result<Self, &'static str> {
         // make sure string is valid ascii
         // let mut name = name.to_owned();
@@ -246,6 +268,7 @@ impl Function {
         Ok(Self { id, name })
     }
 
+    /// turn the function into a tuple containing its id and a pointer to its name.
     pub fn into_raw_parts(&self) -> (u64, *mut c_char) {
         (self.id, self.name.as_ptr() as *mut c_char)
     }

@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[profile.dev]
-rpath = true
+# [profile.dev]
+# rpath = true
 
 [dependencies]
 io_utils = { path = "../io_utils", package = "io_utils" }
 utils = { path = "../utils", package = "utils" }
-ayudame_core_rs = { path = "/home/patrick/hlrs/rust_rewrite/rust-ayudame/Ayudame/src/ayudame_core_rs"}
+ayudame_core_rs = { git = "https://github.com/paddison/ayudame", package = "ayudame_core_rs", branch = "develop-rust" }

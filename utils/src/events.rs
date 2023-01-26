@@ -194,13 +194,14 @@ impl TryFrom<u64> for EventType {
     }
 }
 
-// Converts a given u8 buffer containing a c string into a rust string
-// will return an empty string if buffer contains invalid c_string
+/// Converts a given u8 buffer containing a c string into a rust string
+/// will return an empty string if buffer contains invalid c_string
 pub fn read_function_name_from_buffer(buf: &[u8]) -> String {
     // string is originally stored as CString, but we can just read in the buffer
     String::from_utf8(buf.iter().cloned().collect::<Vec<u8>>()).unwrap_or(String::new())
 }
 
+/// Converts a buffer containing u8 integers to a buffer containing u64 integers.
 pub fn u8_buf_to_u64_buf(buf: &[u8]) -> Result<Vec<u64>, EventError> {
     let mut u64_buf = Vec::new();
 
@@ -217,6 +218,7 @@ pub fn u8_buf_to_u64_buf(buf: &[u8]) -> Result<Vec<u64>, EventError> {
     Ok(u64_buf)
 }
 
+/// Gets the current timestamp
 pub fn get_timestamp(buf: &[u8]) -> Option<Duration> {
     if buf.len() < 8 {
         eprintln!("Buffer needs to be at least 8 bytes long.");
