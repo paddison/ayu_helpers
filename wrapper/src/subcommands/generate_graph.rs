@@ -19,6 +19,7 @@ pub(crate) fn run_generate_graph() {
             ayu_event_addtasktoqueue(predecessor, predecessor);
             ayu_event_preruntask(predecessor, predecessor);
             ayu_event_runtask(predecessor);
+        } else {
             ayu_event_postruntask(predecessor);
         }
 
@@ -28,7 +29,6 @@ pub(crate) fn run_generate_graph() {
         ayu_event_addtasktoqueue(successor, successor);
         ayu_event_preruntask(successor, successor);
         ayu_event_runtask(successor);
-        ayu_event_postruntask(successor);
     }
 }
 
