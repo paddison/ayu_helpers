@@ -23,7 +23,7 @@ pub(crate) fn run_generate_graph() {
         }
 
         ayu_event_addtask(successor, successor, 0, 0);
-        ayu_event_adddependency(predecessor, successor, generate_mem_address_from_id(predecessor), generate_mem_address_from_id(successor));
+        ayu_event_adddependency(successor, predecessor, generate_mem_address_from_id(successor), generate_mem_address_from_id(predecessor));
 
         ayu_event_addtasktoqueue(successor, successor);
         ayu_event_preruntask(successor, successor);
