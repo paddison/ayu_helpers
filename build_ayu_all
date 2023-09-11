@@ -1,26 +1,12 @@
 #!/bin/bash
 
+# Example build file, since I always forget the commands
 # export path to Python config, so ./configure can find it
 export PYTHON_CONFIG=/home/patrick/.local/lib/python3.10/site-packages
 
 cd /home/patrick/hlrs/rust_rewrite/rust-ayudame/Ayudame
 
 # full with ompt
-./configure --prefix=/home/patrick/hlrs/rust_rewrite/installs/Ayudame/full --enable-rust=full --disable-doc
-make clean
-make install
-
-# full no ompt
-./configure --prefix=/home/patrick/hlrs/rust_rewrite/installs/Ayudame/full-no-ompt --enable-rust=full --disable-doc --disable-ompt
-make clean
-make install
-
-# minimal with ompt
-./configure --prefix=/home/patrick/hlrs/rust_rewrite/installs/Ayudame/minimal --enable-rust=minimal --disable-doc
-make clean
-make install
-
-# minimal no ompt
-./configure --prefix=/home/patrick/hlrs/rust_rewrite/installs/Ayudame/minimal-no-ompt --enable-rust=minimal --disable-doc --disable-ompt
+./configure --prefix=/home/patrick/hlrs/rust_rewrite/installs/Ayudame/full --enable-rust --disable-doc --disable-ompt
 make clean
 make install
