@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# export path to Python config, so ./configure can find it
+export PYTHON_CONFIG=/home/patrick/.local/lib/python3.10/site-packages
+
+cd /home/patrick/hlrs/rust_rewrite/rust-ayudame/Ayudame
+
+# full no ompt
+autoreconf -fiv
+./configure --prefix=/home/patrick/hlrs/rust_rewrite/installs/Ayudame/full-no-ompt --enable-rust --disable-doc --disable-ompt
+make clean
+make install

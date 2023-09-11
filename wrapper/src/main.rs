@@ -10,5 +10,6 @@ use subcommands::generate_graph as gg;
 
 
 fn main() {
-    gg::run_generate_graph();
+    //gg::run_generate_graph();
+    ce::run_custom_events();
 }

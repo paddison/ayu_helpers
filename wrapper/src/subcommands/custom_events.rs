@@ -236,22 +236,22 @@ fn create_register_function(state: &mut AppState) -> Result<()> {
 fn create_add_dependency(state: &mut AppState) -> Result<()> {
     state.list_tasks();
 
-    println!("Enter parent, then child id");
+    println!("Enter source, then target id");
 
-    let parent_id = specify_task_id(state)?;
+    let source_id = specify_task_id(state)?;
 
-    let child_id = specify_task_id(state)?;
+    let target_id = specify_task_id(state)?;
 
-    if child_id == parent_id {
+    if source_id == target_id {
         return Err(UserInputError::SameTaskDependency);
     } 
 
-    let memaddr = generate_mem_address_from_id(parent_id);
-    let orig_memaddr = generate_mem_address_from_id(child_id);
+    let memaddr = generate_mem_address_from_id(target_id);
+    let orig_memaddr = generate_mem_address_from_id(source_id);
     
-    state.add_dependency(parent_id, child_id);
+    state.add_dependency(target_id, source_id);
 
-    ayu_event_adddependency(parent_id, child_id, memaddr, orig_memaddr);
+    ayu_event_adddependency(target_id, source_id, memaddr, orig_memaddr);
     Ok(())
 }
 
