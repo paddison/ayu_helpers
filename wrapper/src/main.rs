@@ -5,11 +5,25 @@
 //! 
 //! Usage: AYU_PORT=XXXX cargo run --release
 mod subcommands;
-use subcommands::custom_events as ce;
-use subcommands::generate_graph as gg;
+use std::{ env, fs };
 
+
+use subcommands::custom;
+use subcommands::file;
+use subcommands::generate;
 
 fn main() {
+    let args = env::args().collect::<Vec<String>>();
+    if args.len() == 3 {
+        if args[1] == "file".to_string() {
+            if let Err(e) = file::from_file(&args[2]) {
+                eprintln!("{}", e.to_string());
+            }
+
+        } 
+    } else {
+        custom::run_custom_events();
+    }
     //gg::run_generate_graph();
-    ce::run_custom_events();
 }
+

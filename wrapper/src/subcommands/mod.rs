@@ -1,5 +1,6 @@
-pub(crate) mod generate_graph;
-pub(crate) mod custom_events;
+pub(crate) mod generate;
+pub(crate) mod custom;
+pub(crate) mod file;
 
 const DUMMY_MEMADDR: u64 = 0xffee0000;
 
