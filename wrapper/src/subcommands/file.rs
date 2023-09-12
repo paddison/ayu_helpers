@@ -21,12 +21,15 @@ impl ToString for FileError {
 
 pub (crate) fn from_file(filename: &str) -> Result<(), FileError> {
     let file = fs::read_to_string(filename).map_err(|_| FileError::Io("Unable to open file..."))?;
+    println!("parsed input file");
     let edges = parse_inputs(file)?;
     let mut ids = HashMap::new();
     let mut id_count = 1;
 
     // initialize with temanejo
+    println!("sending preinit");
     ayu_event_preinit(0);
+    println!("sending init");
     ayu_event_init(2);
 
     // build the graph
@@ -48,6 +51,7 @@ pub (crate) fn from_file(filename: &str) -> Result<(), FileError> {
         let to_id = *ids.get(&to).unwrap();
         ayu_event_adddependency(to_id, from_id, DUMMY_MEMADDR, DUMMY_MEMADDR);
     }
+    println!("finished sending graph...");
 
     Ok(())
 }

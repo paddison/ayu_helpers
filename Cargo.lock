@@ -54,9 +54,9 @@ dependencies = [
 [[package]]
 name = "ayudame_core_rs"
 version = "0.1.0"
-source = "git+https://github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
+source = "git+https://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@github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
 dependencies = [
- "cfg-if 1.0.0 (git+https://github.com/paddison/ayudame?branch=develop-rust)",
+ "cfg-if 1.0.0 (git+https://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@github.com/paddison/ayudame?branch=develop-rust)",
  "env_logger",
  "log",
 ]
@@ -93,7 +93,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "cfg-if"
 version = "1.0.0"
-source = "git+https://github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
+source = "git+https://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@github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
 
 [[package]]
 name = "clap"
@@ -145,7 +145,7 @@ checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 [[package]]
 name = "env_logger"
 version = "0.10.0"
-source = "git+https://github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
+source = "git+https://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@github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
 dependencies = [
  "log",
 ]
@@ -240,7 +240,7 @@ checksum = "09fc20d2ca12cb9f044c93e3bd6d32d523e6e2ec3db4f7b2939cd99026ecd3f0"
 [[package]]
 name = "log"
 version = "0.4.17"
-source = "git+https://github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
+source = "git+https://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@github.com/paddison/ayudame?branch=develop-rust#d1b9388442e64e35cf75bdf366ef4cbe058b7c85"
 
 [[package]]
 name = "once_cell"
